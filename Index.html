@@ -1,0 +1,2937 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>BTX Clinic — Prontuário + Agenda + Odontograma + Documentos</title>
+  <meta name="theme-color" content="#0F172A" />
+  <style>
+    /* =========================
+       BTX Clinic — UI Premium
+       Paleta inspirada no dashboard (notebook) + modo claro/escuro
+       ========================= */
+
+    :root{
+      --bg: #0F172A;          /* fundo principal */
+      --bg2:#111827;          /* fundo alternativo */
+      --panel:#1E293B;        /* cards */
+      --panel2:#1F2937;
+      --border:#334155;       /* bordas sutis */
+      --text:#E5E7EB;         /* texto principal */
+      --muted:#94A3B8;        /* texto secundário */
+      --accent:#2563EB;       /* azul BTX */
+      --accent2:#3B82F6;      /* azul brilho */
+      --good:#22C55E;
+      --bad:#EF4444;
+      --warn:#F59E0B;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --shadow2: 0 8px 18px rgba(0,0,0,.25);
+      --radius: 18px;
+      --radius2: 14px;
+      --ring: 0 0 0 3px rgba(37,99,235,.18);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    html[data-theme="light"]{
+      --bg:#F8FAFC;
+      --bg2:#F1F5F9;
+      --panel:#FFFFFF;
+      --panel2:#FFFFFF;
+      --border:#D7DEE8;
+      --text:#0F172A;
+      --muted:#475569;
+      --shadow: 0 12px 28px rgba(2,6,23,.10);
+      --shadow2: 0 10px 18px rgba(2,6,23,.08);
+      --ring: 0 0 0 3px rgba(37,99,235,.16);
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(59,130,246,.12), transparent 55%),
+        radial-gradient(800px 500px at 90% 0%, rgba(37,99,235,.10), transparent 55%),
+        radial-gradient(900px 700px at 50% 110%, rgba(34,197,94,.07), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    a{ color:inherit; text-decoration:none; }
+    button, input, select, textarea{ font:inherit; color:inherit; }
+    textarea{ resize:vertical; }
+
+    .app{
+      min-height:100dvh;
+      display:flex;
+      flex-direction:column;
+      padding-bottom:84px; /* espaço pro dock */
+    }
+
+    /* Top bar */
+    .topbar{
+      position:sticky; top:0; z-index:30;
+      backdrop-filter:saturate(140%) blur(10px);
+      background: rgba(15,23,42,.65);
+      border-bottom:1px solid rgba(148,163,184,.12);
+    }
+    html[data-theme="light"] .topbar{
+      background: rgba(248,250,252,.70);
+      border-bottom:1px solid rgba(15,23,42,.08);
+    }
+    .topbar-inner{
+      max-width:1200px;
+      margin:0 auto;
+      padding:14px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      min-width: 240px;
+    }
+    .logo{
+      width:36px; height:36px;
+      border-radius:12px;
+      background:
+        radial-gradient(12px 12px at 30% 30%, rgba(255,255,255,.35), transparent 60%),
+        linear-gradient(135deg, rgba(37,99,235,1), rgba(59,130,246,1));
+      box-shadow: 0 12px 18px rgba(37,99,235,.18);
+      position:relative;
+      overflow:hidden;
+    }
+    .logo:before{
+      content:"";
+      position:absolute; inset:6px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.28);
+      clip-path: polygon(25% 6%, 75% 6%, 95% 50%, 75% 94%, 25% 94%, 5% 50%);
+    }
+    .brand h1{
+      font-size:15px;
+      margin:0;
+      letter-spacing:.2px;
+      display:flex; flex-direction:column;
+      line-height:1.1;
+    }
+    .brand small{ color:var(--muted); font-weight:500; }
+
+    .top-actions{
+      display:flex; align-items:center; gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 12px;
+      border-radius:999px;
+      background:rgba(148,163,184,.10);
+      border:1px solid rgba(148,163,184,.16);
+      box-shadow: var(--shadow2);
+    }
+    html[data-theme="light"] .chip{
+      background:rgba(15,23,42,.04);
+      border:1px solid rgba(15,23,42,.08);
+      box-shadow:none;
+    }
+    .chip input{
+      border:none; outline:none;
+      background:transparent;
+      width:min(420px, 52vw);
+      color:var(--text);
+    }
+    .btn{
+      border:none;
+      border-radius:999px;
+      padding:10px 12px;
+      background:rgba(148,163,184,.10);
+      border:1px solid rgba(148,163,184,.16);
+      cursor:pointer;
+      transition: transform .08s ease, background .15s ease, border .15s ease;
+      display:inline-flex; align-items:center; gap:8px;
+      user-select:none;
+    }
+    .btn:hover{ transform: translateY(-1px); background: rgba(148,163,184,.14); }
+    .btn:active{ transform: translateY(0px) scale(.98); }
+    .btn.primary{
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow: 0 12px 24px rgba(37,99,235,.20);
+    }
+    .btn.primary:hover{ filter:brightness(1.03); }
+    .btn.danger{ background: rgba(239,68,68,.10); border:1px solid rgba(239,68,68,.22); }
+    .btn.good{ background: rgba(34,197,94,.10); border:1px solid rgba(34,197,94,.22); }
+    .btn:focus{ outline:none; box-shadow: var(--ring); }
+
+    /* Layout container */
+    .container{
+      max-width:1200px;
+      margin:0 auto;
+      padding:16px 14px 0;
+      width:100%;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns:1fr; }
+      .brand{ min-width:auto; }
+      .chip input{ width: 52vw; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)) , var(--panel);
+      border:1px solid rgba(148,163,184,.16);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    html[data-theme="light"] .card{
+      background: var(--panel);
+      border:1px solid rgba(15,23,42,.08);
+    }
+    .card h2{
+      font-size:14px;
+      margin:0;
+      padding:14px 14px 10px;
+      letter-spacing:.2px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom:1px solid rgba(148,163,184,.10);
+    }
+    .card h2 .sub{ color:var(--muted); font-weight:500; }
+    .card .body{ padding:14px; }
+
+    .row{
+      display:flex; gap:10px; flex-wrap:wrap;
+      align-items:center;
+    }
+    .row > *{ flex: 1 1 180px; }
+    .row.tight > *{ flex: 1 1 140px; }
+    .field{ display:flex; flex-direction:column; gap:6px; }
+    .field label{ font-size:12px; color:var(--muted); }
+    .field input, .field select, .field textarea{
+      background: rgba(148,163,184,.08);
+      border:1px solid rgba(148,163,184,.16);
+      border-radius: 12px;
+      padding:10px 10px;
+      outline:none;
+      transition: box-shadow .15s ease, border .15s ease, background .15s ease;
+    }
+    html[data-theme="light"] .field input,
+    html[data-theme="light"] .field select,
+    html[data-theme="light"] .field textarea{
+      background: rgba(15,23,42,.03);
+      border:1px solid rgba(15,23,42,.10);
+    }
+    .field input:focus, .field select:focus, .field textarea:focus{
+      border-color: rgba(37,99,235,.45);
+      box-shadow: var(--ring);
+    }
+
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      background: rgba(148,163,184,.10);
+      border:1px solid rgba(148,163,184,.16);
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .pill b{ color:var(--text); font-weight:700; }
+
+    .list{
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .item{
+      background: rgba(148,163,184,.06);
+      border:1px solid rgba(148,163,184,.14);
+      border-radius: 14px;
+      padding:12px;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      justify-content:space-between;
+    }
+    html[data-theme="light"] .item{
+      background: rgba(15,23,42,.03);
+      border:1px solid rgba(15,23,42,.08);
+    }
+    .item .meta{ display:flex; flex-direction:column; gap:4px; }
+    .item .title{ font-weight:700; }
+    .item .desc{ color:var(--muted); font-size:12px; line-height:1.35; }
+    .item .actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+
+    .badge{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      border:1px solid rgba(148,163,184,.16);
+      background: rgba(148,163,184,.08);
+      color:var(--muted);
+      user-select:none;
+    }
+    .badge.good{ background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.25); color: var(--good); }
+    .badge.bad{ background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.25); color: var(--bad); }
+    .badge.warn{ background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.25); color: var(--warn); }
+
+    /* Dock */
+    .dock{
+      position:fixed; left:0; right:0; bottom:0;
+      padding:10px 12px env(safe-area-inset-bottom);
+      z-index:40;
+    }
+    .dock-inner{
+      max-width: 840px;
+      margin:0 auto;
+      background: rgba(15,23,42,.70);
+      border:1px solid rgba(148,163,184,.16);
+      border-radius: 24px;
+      backdrop-filter: saturate(140%) blur(10px);
+      box-shadow: var(--shadow);
+      display:flex;
+      gap:8px;
+      padding:10px;
+      justify-content:space-between;
+    }
+    html[data-theme="light"] .dock-inner{
+      background: rgba(248,250,252,.78);
+      border:1px solid rgba(15,23,42,.10);
+    }
+    .tab{
+      flex:1 1 auto;
+      border:none;
+      border-radius: 18px;
+      padding:10px 10px;
+      cursor:pointer;
+      background: transparent;
+      color: var(--muted);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      transition: background .15s ease, transform .08s ease, color .15s ease;
+      user-select:none;
+      min-width: 0;
+    }
+    .tab:hover{ background: rgba(148,163,184,.10); transform: translateY(-1px); }
+    .tab.active{
+      background: rgba(37,99,235,.14);
+      border:1px solid rgba(37,99,235,.22);
+      color: var(--text);
+    }
+    .tab span{ font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ico{
+      width:20px; height:20px; display:block;
+      fill: currentColor;
+      opacity:.95;
+    }
+
+    /* Sections */
+    .section{ display:none; }
+    .section.active{ display:block; }
+
+    /* Odontogram */
+    .odo-wrap{ display:grid; grid-template-columns: 1fr; gap:12px; }
+    .odo-legend{
+      display:flex; flex-wrap:wrap; gap:8px;
+      padding:10px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.14);
+      background: rgba(148,163,184,.06);
+    }
+    .legend-item{
+      display:flex; align-items:center; gap:8px;
+      padding:8px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(148,163,184,.14);
+      background: rgba(0,0,0,.10);
+      font-size:12px;
+      color: var(--muted);
+      user-select:none;
+    }
+    html[data-theme="light"] .legend-item{ background: rgba(15,23,42,.03); }
+    .swatch{ width:10px; height:10px; border-radius:999px; background:#999; }
+    .odo-grid{
+      display:grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap:10px;
+    }
+    @media (max-width:520px){ .odo-grid{ grid-template-columns: repeat(4, 1fr);} }
+    .tooth{
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.16);
+      background: rgba(148,163,184,.06);
+      padding:10px;
+      cursor:pointer;
+      transition: transform .08s ease, background .15s ease, border .15s ease;
+      user-select:none;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .tooth:hover{ transform: translateY(-1px); background: rgba(148,163,184,.10); }
+    .tooth:active{ transform: scale(.98); }
+    .tooth .n{ font-weight:800; font-family:var(--mono); font-size:12px; color: var(--muted);}
+    .tooth .status{
+      font-size:12px;
+      font-weight:800;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.16);
+      align-self:flex-start;
+    }
+    .tooth .note{ font-size:12px; color: var(--muted); line-height:1.35; min-height:32px; }
+
+    /* Modal */
+    .modal{
+      position:fixed; inset:0; z-index:60;
+      display:none;
+      background: rgba(2,6,23,.62);
+      padding:16px;
+      overflow:auto;
+    }
+    .modal.active{ display:block; }
+    .modal .dialog{
+      max-width: 1040px;
+      margin: 0 auto;
+      background: var(--panel);
+      border:1px solid rgba(148,163,184,.16);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modal .head{
+      padding:12px 14px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:1px solid rgba(148,163,184,.10);
+    }
+    .modal .head .title{ font-weight:800; }
+    .modal .content{ padding:14px; }
+    .split{
+      display:grid;
+      grid-template-columns: 1fr 380px;
+      gap:14px;
+    }
+    @media (max-width: 980px){ .split{ grid-template-columns:1fr; } }
+
+    /* Print preview pages */
+    .print-area{
+      background: radial-gradient(900px 600px at 20% 10%, rgba(59,130,246,.07), transparent 60%), var(--bg2);
+      border-radius: 18px;
+      border:1px solid rgba(148,163,184,.12);
+      padding:14px;
+      overflow:auto;
+      min-height: 520px;
+    }
+    .a4-page{
+      width: 210mm;
+      min-height: 297mm;
+      background: #fff;
+      color:#0F172A;
+      margin: 0 auto 14px;
+      border-radius: 10px; /* arredondado */
+      border: 1.5px solid #2563EB; /* azul fino e elegante */
+      box-shadow: 0 8px 22px rgba(0,0,0,.18);
+      overflow:hidden;
+      position:relative;
+      page-break-after: always;
+    }
+    .a4-inner{
+      padding: 14mm 14mm 12mm;
+      font-family: var(--sans);
+      font-size: 12.2px;
+      line-height: 1.35;
+    }
+    .a4-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding-bottom:10px;
+      border-bottom:1px solid rgba(37,99,235,.22);
+      margin-bottom:10px;
+    }
+    .a4-brand{
+      display:flex; align-items:center; gap:10px;
+    }
+    .a4-logo{
+      width:22px; height:22px;
+      border-radius:8px;
+      background: linear-gradient(135deg, #2563EB, #3B82F6);
+      position:relative;
+      overflow:hidden;
+    }
+    .a4-logo:before{
+      content:"";
+      position:absolute; inset:4px;
+      border-radius:7px;
+      border:1px solid rgba(255,255,255,.36);
+      clip-path: polygon(25% 6%, 75% 6%, 95% 50%, 75% 94%, 25% 94%, 5% 50%);
+    }
+    .a4-title{
+      display:flex; flex-direction:column; gap:2px;
+    }
+    .a4-title b{ font-size: 13px; letter-spacing:.3px; }
+    .a4-title small{ font-size: 11px; color:#475569; }
+    .a4-meta{
+      text-align:right;
+      font-size:11px;
+      color:#334155;
+    }
+    .a4-section{
+      margin: 10px 0;
+    }
+    .a4-section h3{
+      margin:0 0 6px;
+      font-size:12px;
+      letter-spacing:.2px;
+      color:#0F172A;
+    }
+    .a4-kv{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:8px 12px;
+    }
+    .a4-kv .kv{
+      border:1px solid rgba(37,99,235,.16);
+      border-radius:10px;
+      padding:8px 10px;
+      background: rgba(37,99,235,.04);
+    }
+    .a4-kv .k{ font-size:10.5px; color:#475569; margin-bottom:2px; }
+    .a4-kv .v{ font-size:12px; font-weight:650; }
+    .a4-text{
+      border:1px solid rgba(37,99,235,.16);
+      border-radius:10px;
+      padding:10px 10px;
+      background: rgba(37,99,235,.03);
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    .a4-foot{
+      position:absolute;
+      left:0; right:0; bottom:0;
+      padding:7px 12mm;
+      border-top:1px solid rgba(37,99,235,.18);
+      color:#475569;
+      font-size:10.5px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      background: rgba(255,255,255,.85);
+    }
+
+    /* Print rules */
+    @media print{
+      body{ background:#fff !important; }
+      .topbar, .dock, .no-print, .modal .head, .modal .content-right{ display:none !important; }
+      .modal{ position:static; background:none; padding:0; }
+      .modal .dialog{ box-shadow:none; border:none; border-radius:0; }
+      .modal .content{ padding:0; }
+      .print-area{ border:none; background:none; padding:0; }
+      .a4-page{
+        margin:0;
+        box-shadow:none;
+        page-break-after: always;
+      }
+      @page { size: A4; margin: 10mm; }
+    }
+
+    /* Small helpers */
+    .hr{ height:1px; background:rgba(148,163,184,.14); margin:12px 0; }
+    .muted{ color:var(--muted); }
+    .right{ text-align:right; }
+    .two{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width:700px){ .two{ grid-template-columns:1fr; } }
+    .note-box{
+      border-radius: 14px;
+      border:1px solid rgba(148,163,184,.14);
+      background: rgba(148,163,184,.06);
+      padding:12px;
+    }
+    .kbd{
+      font-family: var(--mono);
+      font-size: 11px;
+      padding:4px 7px;
+      border-radius:8px;
+      border:1px solid rgba(148,163,184,.18);
+      background: rgba(148,163,184,.10);
+      color: var(--muted);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <!-- TOPBAR -->
+    <header class="topbar no-print">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <h1>
+            BTX Clinic
+            <small>Prontuário + Agenda + Odontograma + Documentos A4</small>
+          </h1>
+        </div>
+
+        <div class="top-actions">
+          <div class="chip" title="Busca rápida (paciente / telefone / agenda)">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M10 18a8 8 0 1 1 5.293-14.01A8 8 0 0 1 10 18zm11 3-6.1-6.1 1.4-1.4L22.4 19.6 21 21z"></path>
+            </svg>
+            <input id="quickSearch" placeholder="Buscar paciente / agenda..." />
+          </div>
+
+          <button class="btn" id="themeBtn" title="Alternar claro/escuro">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12zm0 4a1 1 0 0 1-1-1v-1a1 1 0 1 1 2 0v1a1 1 0 0 1-1 1zM12 4a1 1 0 0 1-1-1V2a1 1 0 1 1 2 0v1a1 1 0 0 1-1 1zM4 13H3a1 1 0 1 1 0-2h1a1 1 0 1 1 0 2zm18 0h-1a1 1 0 1 1 0-2h1a1 1 0 1 1 0 2zM6.34 19.07a1 1 0 0 1-.7-.29l-.7-.7a1 1 0 1 1 1.4-1.42l.7.7a1 1 0 0 1-.7 1.71zM19.06 6.36a1 1 0 0 1-.7-.29l-.7-.7a1 1 0 1 1 1.42-1.4l.7.7a1 1 0 0 1-.72 1.69zM6.34 4.93a1 1 0 0 1-.7-1.71l.7-.7a1 1 0 1 1 1.4 1.42l-.7.7a1 1 0 0 1-.7.29zM19.06 17.64a1 1 0 0 1-.7-1.71l.7-.7a1 1 0 1 1 1.42 1.4l-.7.7a1 1 0 0 1-.72.31z"/>
+            </svg>
+            Tema
+          </button>
+
+          <button class="btn primary" id="printCenterBtn" title="Central de Impressão">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 9V3h12v6H6zm10-2V5H8v2h8zM6 21v-6h12v6H6zm2-2h8v-2H8v2zM6 13H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2v-2h2V9H4v2h2v2z"></path>
+            </svg>
+            Imprimir
+          </button>
+
+          <button class="btn" id="saveNowBtn" title="Salvar agora (auto-save já fica ligado)">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zM7 5h8v4H7V5zm12 14H5V5h1v6h11V5h.17L19 7.83V19z"></path>
+            </svg>
+            Salvar
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="container">
+      <!-- DASH (Resumo) -->
+      <section class="section active" id="sec-dashboard">
+        <div class="grid">
+          <div class="card">
+            <h2>
+              <span>Resumo rápido <span class="sub">— hoje</span></span>
+              <span class="pill"><b id="todayCount">0</b> agendados</span>
+            </h2>
+            <div class="body">
+              <div class="two">
+                <div class="note-box">
+                  <div class="row tight">
+                    <div class="pill"><b id="patientsCount">0</b> pacientes</div>
+                    <div class="pill"><b id="apptsCount">0</b> atendimentos</div>
+                    <div class="pill"><b id="docsCount">0</b> documentos</div>
+                  </div>
+                  <div class="hr"></div>
+                  <div class="muted" style="font-size:13px; line-height:1.45">
+                    <b style="color:var(--text)">BTX Clinic</b> roda offline, salva sozinho e imprime bonito (A4 com borda azul arredondada).
+                    <br><br>
+                    Atalhos: <span class="kbd">Pacientes</span> → abrir prontuário e odontograma. <span class="kbd">Documentos</span> → receita, atestado e orçamento em 1 clique.
+                  </div>
+                </div>
+
+                <div class="note-box">
+                  <div class="field">
+                    <label>Filtro rápido (data)</label>
+                    <input type="date" id="dashDate" />
+                  </div>
+                  <div class="hr"></div>
+                  <div id="dashAppts" class="list"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>
+              <span>Configurações do Profissional <span class="sub">— usado nos documentos</span></span>
+              <span class="pill">editável</span>
+            </h2>
+            <div class="body">
+              <div class="field">
+                <label>Nome do profissional</label>
+                <input id="profName" placeholder="Ex.: Dr. Orlando Abreu" />
+              </div>
+              <div class="row">
+                <div class="field">
+                  <label>Registro (CRO/CRM)</label>
+                  <input id="profReg" placeholder="Ex.: CRO-PA 0000" />
+                </div>
+                <div class="field">
+                  <label>Telefone / WhatsApp</label>
+                  <input id="profPhone" placeholder="(91) 99999-9999" />
+                </div>
+              </div>
+              <div class="field">
+                <label>Endereço</label>
+                <input id="profAddr" placeholder="Rua, número, bairro, cidade/UF" />
+              </div>
+              <div class="row">
+                <button class="btn primary" id="saveProfileBtn">Salvar dados do profissional</button>
+                <button class="btn" id="resetAllBtn" title="Cuidado: apaga tudo!">Zerar sistema</button>
+              </div>
+              <div class="hr"></div>
+              <div class="muted" style="font-size:12px">
+                Dica: para transferir tudo para outro tablet, vá em <b>Backup</b> → Exportar e Importar.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- AGENDA -->
+      <section class="section" id="sec-agenda">
+        <div class="card">
+          <h2>
+            <span>Agenda <span class="sub">— cria, confirma e imprime relatório</span></span>
+            <span class="pill">offline</span>
+          </h2>
+          <div class="body">
+            <div class="row">
+              <div class="field">
+                <label>Data e hora</label>
+                <input type="datetime-local" id="apptDateTime" />
+              </div>
+              <div class="field">
+                <label>Paciente</label>
+                <select id="apptPatient"></select>
+              </div>
+              <div class="field">
+                <label>Status</label>
+                <select id="apptStatus">
+                  <option value="confirmado">Confirmado</option>
+                  <option value="pendente">Pendente</option>
+                  <option value="faltou">Faltou</option>
+                  <option value="reagendado">Reagendado</option>
+                  <option value="concluido">Concluído</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label>Observação</label>
+              <textarea id="apptNote" rows="3" placeholder="Ex.: Dor em 36, retorno, exames, etc."></textarea>
+            </div>
+            <div class="row">
+              <button class="btn primary" id="addApptBtn">Adicionar na agenda</button>
+              <button class="btn" id="printAgendaBtn">Imprimir relatório (dia)</button>
+            </div>
+            <div class="hr"></div>
+
+            <div class="row">
+              <div class="field">
+                <label>Filtrar por data</label>
+                <input type="date" id="apptFilterDate" />
+              </div>
+              <div class="field">
+                <label>Buscar</label>
+                <input id="apptSearch" placeholder="Paciente / nota / status..." />
+              </div>
+              <div class="field">
+                <label>&nbsp;</label>
+                <button class="btn" id="clearApptFilterBtn">Limpar filtros</button>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+            <div id="apptList" class="list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PACIENTES -->
+      <section class="section" id="sec-patients">
+        <div class="grid">
+          <div class="card">
+            <h2>
+              <span>Pacientes <span class="sub">— cadastro + anexos</span></span>
+              <span class="pill"><b id="patientsCount2">0</b> total</span>
+            </h2>
+            <div class="body">
+              <div class="row">
+                <div class="field">
+                  <label>Nome</label>
+                  <input id="pName" placeholder="Nome completo" />
+                </div>
+                <div class="field">
+                  <label>Telefone</label>
+                  <input id="pPhone" placeholder="WhatsApp" />
+                </div>
+                <div class="field">
+                  <label>Data de nascimento</label>
+                  <input type="date" id="pBirth" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="field">
+                  <label>Documento (CPF/RG)</label>
+                  <input id="pDoc" placeholder="Opcional" />
+                </div>
+                <div class="field">
+                  <label>Endereço</label>
+                  <input id="pAddr" placeholder="Opcional" />
+                </div>
+              </div>
+              <div class="row">
+                <button class="btn primary" id="addPatientBtn">Salvar paciente</button>
+                <button class="btn" id="newPatientBtn">Limpar</button>
+              </div>
+              <div class="hr"></div>
+
+              <div class="row">
+                <div class="field">
+                  <label>Buscar paciente</label>
+                  <input id="patientSearch" placeholder="Nome / telefone / documento..." />
+                </div>
+                <div class="field">
+                  <label>Ordenar</label>
+                  <select id="patientSort">
+                    <option value="nameAsc">Nome (A-Z)</option>
+                    <option value="nameDesc">Nome (Z-A)</option>
+                    <option value="recent">Mais recentes</option>
+                  </select>
+                </div>
+              </div>
+              <div class="hr"></div>
+
+              <div id="patientList" class="list"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>
+              <span>Paciente selecionado <span class="sub">— prontuário rápido</span></span>
+              <span class="pill">1 clique</span>
+            </h2>
+            <div class="body" id="patientPanel">
+              <div class="muted">Selecione um paciente na lista.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRONTUÁRIO -->
+      <section class="section" id="sec-record">
+        <div class="card">
+          <h2>
+            <span>Prontuário <span class="sub">— ficha clínica completa</span></span>
+            <span class="pill">auto-save</span>
+          </h2>
+          <div class="body">
+            <div class="row">
+              <div class="field">
+                <label>Paciente</label>
+                <select id="recPatient"></select>
+              </div>
+              <div class="field">
+                <label>Queixa principal</label>
+                <input id="recQP" placeholder="Ex.: Dor ao mastigar em 36" />
+              </div>
+              <div class="field">
+                <label>Data</label>
+                <input type="date" id="recDate" />
+              </div>
+            </div>
+
+            <div class="two">
+              <div class="field">
+                <label>Anamnese (história / sintomas)</label>
+                <textarea id="recHx" rows="6" placeholder="Descreva a história, evolução e sintomas..."></textarea>
+              </div>
+              <div class="field">
+                <label>Antecedentes / medicações / alergias</label>
+                <textarea id="recPMH" rows="6" placeholder="HAS, DM, alergia a dipirona, usa anticoagulante, etc."></textarea>
+              </div>
+            </div>
+
+            <div class="two">
+              <div class="field">
+                <label>Exame físico / odontológico</label>
+                <textarea id="recExam" rows="6" placeholder="Achados clínicos, palpação, percussão, mobilidade, etc."></textarea>
+              </div>
+              <div class="field">
+                <label>Hipótese diagnóstica / diagnóstico</label>
+                <textarea id="recDx" rows="6" placeholder="Diagnóstico provável e diferencial..."></textarea>
+              </div>
+            </div>
+
+            <div class="two">
+              <div class="field">
+                <label>Conduta / tratamento realizado</label>
+                <textarea id="recPlan" rows="6" placeholder="Procedimentos, orientações, retorno, etc."></textarea>
+              </div>
+              <div class="field">
+                <label>Evolução / retornos</label>
+                <textarea id="recProg" rows="6" placeholder="Evolução, reavaliação, observações de retorno..."></textarea>
+              </div>
+            </div>
+
+            <div class="row">
+              <button class="btn primary" id="saveRecordBtn">Salvar prontuário</button>
+              <button class="btn" id="printRecordBtn">Imprimir ficha clínica (A4)</button>
+              <button class="btn" id="gotoOdoBtn">Abrir odontograma desse paciente</button>
+            </div>
+            <div class="hr"></div>
+
+            <div class="muted" style="font-size:12px">
+              Dica: o prontuário salva sozinho enquanto você digita. E imprime em páginas com borda azul arredondada, sem quebrar feio.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ODONTOGRAMA -->
+      <section class="section" id="sec-odo">
+        <div class="card">
+          <h2>
+            <span>Odontograma <span class="sub">— clique no dente para marcar status</span></span>
+            <span class="pill">por paciente</span>
+          </h2>
+          <div class="body">
+            <div class="row">
+              <div class="field">
+                <label>Paciente</label>
+                <select id="odoPatient"></select>
+              </div>
+              <div class="field">
+                <label>Nota rápida (do dente selecionado)</label>
+                <input id="odoNote" placeholder="Ex.: Dor à percussão / restauração antiga..." />
+              </div>
+              <div class="field">
+                <label>&nbsp;</label>
+                <button class="btn primary" id="odoSaveNoteBtn">Salvar nota do dente</button>
+              </div>
+            </div>
+
+            <div class="odo-wrap">
+              <div class="odo-legend" id="odoLegend"></div>
+              <div class="odo-grid" id="odoGrid"></div>
+            </div>
+
+            <div class="hr"></div>
+            <div class="row">
+              <button class="btn" id="odoClearBtn">Limpar odontograma (paciente)</button>
+              <button class="btn" id="printOdoBtn">Imprimir odontograma</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DOCUMENTOS -->
+      <section class="section" id="sec-docs">
+        <div class="grid">
+          <div class="card">
+            <h2>
+              <span>Documentos <span class="sub">— receita, atestado e orçamento</span></span>
+              <span class="pill">A4 premium</span>
+            </h2>
+            <div class="body">
+              <div class="row">
+                <div class="field">
+                  <label>Paciente</label>
+                  <select id="docPatient"></select>
+                </div>
+                <div class="field">
+                  <label>Data</label>
+                  <input type="date" id="docDate" />
+                </div>
+                <div class="field">
+                  <label>Tipo</label>
+                  <select id="docType">
+                    <option value="receituario">Receituário</option>
+                    <option value="atestado">Atestado</option>
+                    <option value="orcamento">Orçamento</option>
+                    <option value="laudo">Laudo/Declaração</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Título (opcional)</label>
+                <input id="docTitle" placeholder="Ex.: Receituário odontológico" />
+              </div>
+
+              <div class="field">
+                <label>Conteúdo (texto livre)</label>
+                <textarea id="docBody" rows="10" placeholder="Digite o texto do documento..."></textarea>
+              </div>
+
+              <div class="row">
+                <button class="btn primary" id="saveDocBtn">Salvar documento</button>
+                <button class="btn" id="printDocBtn">Imprimir documento</button>
+              </div>
+
+              <div class="hr"></div>
+              <div class="muted" style="font-size:12px">
+                Dica: você pode salvar modelos prontos e depois só trocar o nome do paciente.
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>
+              <span>Histórico de documentos <span class="sub">— por paciente</span></span>
+              <span class="pill"><b id="docsCount2">0</b> salvos</span>
+            </h2>
+            <div class="body">
+              <div class="row">
+                <div class="field">
+                  <label>Filtrar</label>
+                  <input id="docSearch" placeholder="Paciente / tipo / trecho do texto..." />
+                </div>
+                <div class="field">
+                  <label>&nbsp;</label>
+                  <button class="btn" id="clearDocSearchBtn">Limpar</button>
+                </div>
+              </div>
+              <div class="hr"></div>
+              <div id="docList" class="list"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BACKUP -->
+      <section class="section" id="sec-backup">
+        <div class="card">
+          <h2>
+            <span>Backup <span class="sub">— exportar e importar para outro tablet</span></span>
+            <span class="pill">seguro</span>
+          </h2>
+          <div class="body">
+            <div class="row">
+              <button class="btn primary" id="exportBtn">Exportar backup (.json)</button>
+              <label class="btn" style="cursor:pointer">
+                <input type="file" id="importFile" accept="application/json" style="display:none" />
+                Importar backup
+              </label>
+            </div>
+            <div class="hr"></div>
+            <div class="note-box">
+              <div style="font-weight:800;margin-bottom:6px">Como usar</div>
+              <div class="muted" style="line-height:1.5">
+                1) No tablet antigo: <b>Exportar</b> e salvar o arquivo.<br/>
+                2) No tablet novo: <b>Importar</b> e selecionar o arquivo.<br/>
+                3) Pronto: pacientes, agenda, odontograma e documentos voltam completos.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div style="height:14px"></div>
+    </main>
+
+    <!-- DOCK -->
+    <nav class="dock no-print">
+      <div class="dock-inner">
+        <button class="tab active" data-go="dashboard" title="Resumo">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M4 13h7V4H4v9zm0 7h7v-5H4v5zm9 0h7V11h-7v9zm0-18v7h7V2h-7z"/></svg>
+          <span>Início</span>
+        </button>
+        <button class="tab" data-go="agenda" title="Agenda">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm15 8H2v10h20V10z"/></svg>
+          <span>Agenda</span>
+        </button>
+        <button class="tab" data-go="patients" title="Pacientes">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-4.42 0-8 2-8 4.5V21h16v-2.5C20 16 16.42 14 12 14z"/></svg>
+          <span>Pacientes</span>
+        </button>
+        <button class="tab" data-go="record" title="Prontuário">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1v5h5"/></svg>
+          <span>Prontuário</span>
+        </button>
+        <button class="tab" data-go="odo" title="Odontograma">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M12 2c4 0 7 3 7 7 0 3-1.2 5.7-2.2 8.1-.5 1.2-.9 2.2-1.1 3-.3 1-.9 1.9-2.1 1.9-1 0-1.6-.6-2.1-1.5l-.3-.6-.3.6c-.5.9-1.1 1.5-2.1 1.5-1.2 0-1.8-.9-2.1-1.9-.2-.8-.6-1.8-1.1-3C6.2 14.7 5 12 5 9c0-4 3-7 7-7z"/></svg>
+          <span>Odonto</span>
+        </button>
+        <button class="tab" data-go="docs" title="Documentos">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1v5h5M8 12h8v2H8v-2zm0 4h8v2H8v-2z"/></svg>
+          <span>Docs</span>
+        </button>
+        <button class="tab" data-go="backup" title="Backup">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M12 4a8 8 0 0 1 8 8h2l-3 3-3-3h2a6 6 0 1 0-1.76 4.24l1.42 1.42A8 8 0 1 1 12 4zm1 4v5l4 2-.8 1.7L11 14V8h2z"/></svg>
+          <span>Backup</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- PRINT MODAL -->
+    <div class="modal" id="printModal" aria-hidden="true">
+      <div class="dialog">
+        <div class="head no-print">
+          <div class="title">Central de Impressão — páginas A4 com borda azul arredondada</div>
+          <div class="row" style="justify-content:flex-end; flex: 0 0 auto">
+            <button class="btn" id="closePrintBtn">Fechar</button>
+            <button class="btn primary" id="doPrintBtn">Imprimir agora</button>
+          </div>
+        </div>
+        <div class="content">
+          <div class="split">
+            <div class="print-area" id="printArea">
+              <!-- páginas geradas aqui -->
+              <div class="muted">Gere um documento para pré-visualizar (ex.: Ficha, Receita, Atestado, Orçamento, Agenda).</div>
+            </div>
+
+            <div class="content-right no-print">
+              <div class="card" style="box-shadow:none">
+                <h2><span>Opções rápidas <span class="sub">— gerar e imprimir</span></span><span class="pill">1 clique</span></h2>
+                <div class="body">
+                  <div class="field">
+                    <label>Escolher tipo</label>
+                    <select id="printQuickType">
+                      <option value="agendaDia">Agenda (dia)</option>
+                      <option value="ficha">Ficha clínica</option>
+                      <option value="odontograma">Odontograma</option>
+                      <option value="documento">Documento (selecionado)</option>
+                    </select>
+                  </div>
+                  <div class="field" id="quickDateWrap">
+                    <label>Data (Agenda)</label>
+                    <input type="date" id="printQuickDate" />
+                  </div>
+                  <div class="field" id="quickPatientWrap">
+                    <label>Paciente</label>
+                    <select id="printQuickPatient"></select>
+                  </div>
+                  <div class="row">
+                    <button class="btn primary" id="generateQuickBtn">Gerar</button>
+                    <button class="btn" id="clearPrintBtn">Limpar</button>
+                  </div>
+
+                  <div class="hr"></div>
+                  <div class="muted" style="font-size:12px; line-height:1.5">
+                    <b>Dica</b>: se o texto ficar grande, o BTX Clinic cria automaticamente outra página com a mesma borda azul.
+                  </div>
+                </div>
+              </div>
+
+              <div class="card" style="box-shadow:none;margin-top:12px">
+                <h2><span>Estado <span class="sub">— auto-save</span></span><span class="pill">online/offline</span></h2>
+                <div class="body">
+                  <div class="row tight">
+                    <span class="pill">Auto-save: <b id="autosaveState">ON</b></span>
+                    <span class="pill">Status: <b id="netState">offline</b></span>
+                  </div>
+                  <div class="hr"></div>
+                  <div class="muted" style="font-size:12px">
+                    O sistema salva localmente no tablet (IndexedDB). Internet não é necessária.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- split -->
+        </div><!-- content -->
+      </div><!-- dialog -->
+    </div><!-- modal -->
+  </div>
+
+  <script>
+    /* =========================================================
+       BTX Clinic — Offline-first (IndexedDB) + UI + Impressão A4
+       Tudo em um único HTML.
+       ========================================================= */
+
+    // ---------- Helpers ----------
+    const $ = (sel, el=document)=> el.querySelector(sel);
+    const $$ = (sel, el=document)=> Array.from(el.querySelectorAll(sel));
+    const uid = ()=> crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36)+Math.random().toString(36).slice(2));
+    const fmtDate = (iso)=> {
+      if(!iso) return "";
+      const d = new Date(iso);
+      if(isNaN(d)) return iso;
+      return d.toLocaleDateString('pt-BR');
+    };
+    const fmtDateTime = (iso)=> {
+      if(!iso) return "";
+      const d = new Date(iso);
+      if(isNaN(d)) return iso;
+      return d.toLocaleString('pt-BR');
+    };
+    const toISODate = (d)=> {
+      const pad=(n)=> String(n).padStart(2,'0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    };
+    const todayISO = ()=> toISODate(new Date());
+    const nowLocalDT = ()=> {
+      const d = new Date();
+      const pad=(n)=> String(n).padStart(2,'0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+    const safeText = (s)=> (s ?? "").toString();
+
+    // ---------- Theme ----------
+    const THEME_KEY = "btx_theme";
+    function setTheme(theme){
+      document.documentElement.setAttribute("data-theme", theme);
+      localStorage.setItem(THEME_KEY, theme);
+      // theme-color (Android)
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if(meta){
+        meta.content = (theme==="light") ? "#F8FAFC" : "#0F172A";
+      }
+    }
+    function initTheme(){
+      const saved = localStorage.getItem(THEME_KEY);
+      if(saved) setTheme(saved);
+    }
+
+    // ---------- IndexedDB ----------
+    const DB_NAME = "btx_clinic_db";
+    const DB_VER = 1;
+    let db;
+
+    function openDB(){
+      return new Promise((resolve, reject)=>{
+        const req = indexedDB.open(DB_NAME, DB_VER);
+        req.onupgradeneeded = (e)=>{
+          const db = req.result;
+          if(!db.objectStoreNames.contains("meta")){
+            db.createObjectStore("meta", { keyPath:"key" });
+          }
+          if(!db.objectStoreNames.contains("patients")){
+            const st = db.createObjectStore("patients", { keyPath:"id" });
+            st.createIndex("name", "name", { unique:false });
+            st.createIndex("phone", "phone", { unique:false });
+          }
+          if(!db.objectStoreNames.contains("appointments")){
+            const st = db.createObjectStore("appointments", { keyPath:"id" });
+            st.createIndex("datetime", "datetime", { unique:false });
+            st.createIndex("patientId", "patientId", { unique:false });
+          }
+          if(!db.objectStoreNames.contains("records")){
+            const st = db.createObjectStore("records", { keyPath:"id" });
+            st.createIndex("patientId", "patientId", { unique:false });
+            st.createIndex("date", "date", { unique:false });
+          }
+          if(!db.objectStoreNames.contains("odontograms")){
+            const st = db.createObjectStore("odontograms", { keyPath:"patientId" });
+          }
+          if(!db.objectStoreNames.contains("documents")){
+            const st = db.createObjectStore("documents", { keyPath:"id" });
+            st.createIndex("patientId", "patientId", { unique:false });
+            st.createIndex("date", "date", { unique:false });
+            st.createIndex("type", "type", { unique:false });
+          }
+          if(!db.objectStoreNames.contains("attachments")){
+            const st = db.createObjectStore("attachments", { keyPath:"id" });
+            st.createIndex("patientId", "patientId", { unique:false });
+            st.createIndex("createdAt", "createdAt", { unique:false });
+          }
+        };
+        req.onsuccess = ()=> { db = req.result; resolve(db); };
+        req.onerror = ()=> reject(req.error);
+      });
+    }
+
+    function tx(store, mode="readonly"){
+      return db.transaction(store, mode).objectStore(store);
+    }
+
+    function idbGet(store, key){
+      return new Promise((resolve, reject)=>{
+        const req = tx(store).get(key);
+        req.onsuccess = ()=> resolve(req.result);
+        req.onerror = ()=> reject(req.error);
+      });
+    }
+    function idbPut(store, val){
+      return new Promise((resolve, reject)=>{
+        const req = tx(store, "readwrite").put(val);
+        req.onsuccess = ()=> resolve(true);
+        req.onerror = ()=> reject(req.error);
+      });
+    }
+    function idbDel(store, key){
+      return new Promise((resolve, reject)=>{
+        const req = tx(store, "readwrite").delete(key);
+        req.onsuccess = ()=> resolve(true);
+        req.onerror = ()=> reject(req.error);
+      });
+    }
+    function idbAll(store){
+      return new Promise((resolve, reject)=>{
+        const req = tx(store).getAll();
+        req.onsuccess = ()=> resolve(req.result || []);
+        req.onerror = ()=> reject(req.error);
+      });
+    }
+
+    // ---------- App State ----------
+    const state = {
+      meta: {
+        professional: { name:"", reg:"", phone:"", addr:"" }
+      },
+      patients: [],
+      appointments: [],
+      records: [],
+      odontograms: {},     // patientId => { teeth: {...} }
+      documents: [],
+      attachments: [],
+      selectedPatientId: null,
+      selectedRecordPatientId: null,
+      selectedOdoPatientId: null,
+      selectedDocPatientId: null,
+      selectedDocId: null,
+      autosaveTimer: null
+    };
+
+    // ---------- Odontogram definitions ----------
+    const ODO_STATUSES = [
+      { key:"normal", label:"Normal", color:"#94A3B8" },
+      { key:"carie", label:"Cárie", color:"#EF4444" },
+      { key:"rest", label:"Restauração", color:"#3B82F6" },
+      { key:"endo", label:"Canal", color:"#F59E0B" },
+      { key:"coroa", label:"Coroa", color:"#8B5CF6" },
+      { key:"implante", label:"Implante", color:"#22C55E" },
+      { key:"extraido", label:"Extraído", color:"#0F172A" }
+    ];
+
+    // (Simplificado, mas completo e utilizável)
+    const TEETH = [
+      18,17,16,15,14,13,12,11,
+      21,22,23,24,25,26,27,28,
+      48,47,46,45,44,43,42,41,
+      31,32,33,34,35,36,37,38
+    ];
+
+    // ---------- UI Navigation ----------
+    function go(section){
+      $$(".section").forEach(s=> s.classList.remove("active"));
+      $("#sec-"+section).classList.add("active");
+
+      $$(".tab").forEach(t=> t.classList.toggle("active", t.dataset.go===section));
+      // atualizar selects sempre que troca
+      refreshAllSelects();
+      // atualizar listas
+      if(section==="agenda") renderAppointments();
+      if(section==="patients") { renderPatients(); renderPatientPanel(); }
+      if(section==="record") loadRecordIntoForm(state.selectedRecordPatientId || $("#recPatient").value);
+      if(section==="odo") renderOdontogram();
+      if(section==="docs") renderDocuments();
+      if(section==="dashboard") renderDashboard();
+    }
+
+    // ---------- Meta / Profile ----------
+    async function loadMeta(){
+      const m = await idbGet("meta","professional");
+      if(m && m.value) state.meta.professional = m.value;
+      $("#profName").value = state.meta.professional.name || "";
+      $("#profReg").value  = state.meta.professional.reg  || "";
+      $("#profPhone").value= state.meta.professional.phone|| "";
+      $("#profAddr").value = state.meta.professional.addr || "";
+    }
+    async function saveMeta(){
+      state.meta.professional = {
+        name: $("#profName").value.trim(),
+        reg: $("#profReg").value.trim(),
+        phone: $("#profPhone").value.trim(),
+        addr: $("#profAddr").value.trim()
+      };
+      await idbPut("meta", { key:"professional", value: state.meta.professional });
+      toast("Dados do profissional salvos ✅");
+    }
+
+    // ---------- Data Load ----------
+    async function loadAll(){
+      state.patients = await idbAll("patients");
+      state.appointments = await idbAll("appointments");
+      state.records = await idbAll("records");
+      state.documents = await idbAll("documents");
+      state.attachments = await idbAll("attachments");
+      // odontograms: store by patientId
+      const olist = await idbAll("odontograms");
+      state.odontograms = {};
+      for(const o of olist) state.odontograms[o.patientId] = o;
+    }
+
+    // ---------- Save patient ----------
+    let editingPatientId = null;
+
+    async function addOrUpdatePatient(){
+      const name = $("#pName").value.trim();
+      if(!name){ toast("Digite o nome do paciente."); return; }
+      const patient = {
+        id: editingPatientId || uid(),
+        name,
+        phone: $("#pPhone").value.trim(),
+        birth: $("#pBirth").value || "",
+        doc: $("#pDoc").value.trim(),
+        addr: $("#pAddr").value.trim(),
+        createdAt: editingPatientId ? (state.patients.find(p=>p.id===editingPatientId)?.createdAt || Date.now()) : Date.now(),
+        updatedAt: Date.now()
+      };
+      await idbPut("patients", patient);
+      editingPatientId = null;
+      clearPatientForm();
+      await loadAll();
+      refreshAll();
+      toast("Paciente salvo ✅");
+    }
+
+    function clearPatientForm(){
+      $("#pName").value="";
+      $("#pPhone").value="";
+      $("#pBirth").value="";
+      $("#pDoc").value="";
+      $("#pAddr").value="";
+      editingPatientId = null;
+    }
+
+    async function deletePatient(id){
+      if(!confirm("Excluir este paciente? (Agenda, prontuário, documentos e odontograma dele também serão removidos)")) return;
+
+      // delete patient
+      await idbDel("patients", id);
+
+      // cascade deletes
+      for(const a of state.appointments.filter(x=>x.patientId===id)) await idbDel("appointments", a.id);
+      for(const r of state.records.filter(x=>x.patientId===id)) await idbDel("records", r.id);
+      for(const d of state.documents.filter(x=>x.patientId===id)) await idbDel("documents", d.id);
+      for(const at of state.attachments.filter(x=>x.patientId===id)) await idbDel("attachments", at.id);
+      await idbDel("odontograms", id);
+
+      await loadAll();
+      if(state.selectedPatientId===id) state.selectedPatientId=null;
+      refreshAll();
+      toast("Paciente excluído 🗑️");
+    }
+
+    function editPatient(id){
+      const p = state.patients.find(x=>x.id===id);
+      if(!p) return;
+      editingPatientId = id;
+      $("#pName").value = p.name || "";
+      $("#pPhone").value= p.phone|| "";
+      $("#pBirth").value= p.birth|| "";
+      $("#pDoc").value  = p.doc  || "";
+      $("#pAddr").value = p.addr || "";
+      toast("Editando paciente ✍️");
+      go("patients");
+    }
+
+    // ---------- Attachments ----------
+    async function addAttachment(patientId, file){
+      if(!patientId || !file) return;
+      const blob = file; // File é um Blob
+      const att = {
+        id: uid(),
+        patientId,
+        name: file.name,
+        type: file.type || "application/octet-stream",
+        size: file.size || 0,
+        createdAt: Date.now(),
+        blob
+      };
+      await idbPut("attachments", att);
+      await loadAll();
+      renderPatientPanel();
+      toast("Anexo salvo ✅");
+    }
+
+    function downloadAttachment(att){
+      const url = URL.createObjectURL(att.blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = att.name || "anexo";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 5000);
+    }
+
+    async function deleteAttachment(id){
+      if(!confirm("Excluir este anexo?")) return;
+      await idbDel("attachments", id);
+      await loadAll();
+      renderPatientPanel();
+      toast("Anexo excluído 🗑️");
+    }
+
+    // ---------- Agenda ----------
+    async function addAppointment(){
+      const dt = $("#apptDateTime").value;
+      const patientId = $("#apptPatient").value;
+      if(!dt){ toast("Selecione data e hora."); return; }
+      if(!patientId){ toast("Selecione um paciente."); return; }
+
+      const appt = {
+        id: uid(),
+        datetime: new Date(dt).toISOString(),
+        patientId,
+        status: $("#apptStatus").value,
+        note: $("#apptNote").value.trim(),
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      };
+      await idbPut("appointments", appt);
+
+      $("#apptNote").value="";
+      await loadAll();
+      refreshAll();
+      toast("Agendamento criado ✅");
+    }
+
+    async function deleteAppointment(id){
+      if(!confirm("Excluir este agendamento?")) return;
+      await idbDel("appointments", id);
+      await loadAll();
+      refreshAll();
+      toast("Agendamento excluído 🗑️");
+    }
+
+    async function toggleApptStatus(id){
+      const a = state.appointments.find(x=>x.id===id);
+      if(!a) return;
+      // ciclo simples
+      const order = ["pendente","confirmado","concluido","reagendado","faltou"];
+      const idx = order.indexOf(a.status);
+      a.status = order[(idx+1) % order.length];
+      a.updatedAt = Date.now();
+      await idbPut("appointments", a);
+      await loadAll();
+      renderAppointments();
+      renderDashboard();
+    }
+
+    // ---------- Prontuário ----------
+    async function saveRecord(){
+      const patientId = $("#recPatient").value;
+      if(!patientId){ toast("Selecione um paciente."); return; }
+      const existing = state.records.find(r=>r.patientId===patientId);
+      const rec = {
+        id: existing?.id || uid(),
+        patientId,
+        date: $("#recDate").value || todayISO(),
+        qp: $("#recQP").value.trim(),
+        hx: $("#recHx").value,
+        pmh: $("#recPMH").value,
+        exam: $("#recExam").value,
+        dx: $("#recDx").value,
+        plan: $("#recPlan").value,
+        prog: $("#recProg").value,
+        createdAt: existing?.createdAt || Date.now(),
+        updatedAt: Date.now()
+      };
+      await idbPut("records", rec);
+      await loadAll();
+      toast("Prontuário salvo ✅");
+      refreshCounts();
+    }
+
+    function loadRecordIntoForm(patientId){
+      if(!patientId) return;
+      const rec = state.records.find(r=>r.patientId===patientId);
+      $("#recPatient").value = patientId;
+      $("#recDate").value = rec?.date || todayISO();
+      $("#recQP").value = rec?.qp || "";
+      $("#recHx").value = rec?.hx || "";
+      $("#recPMH").value = rec?.pmh || "";
+      $("#recExam").value = rec?.exam || "";
+      $("#recDx").value = rec?.dx || "";
+      $("#recPlan").value = rec?.plan || "";
+      $("#recProg").value = rec?.prog || "";
+      state.selectedRecordPatientId = patientId;
+    }
+
+    // Auto-save while typing
+    function setupAutosave(){
+      const fields = ["recQP","recDate","recHx","recPMH","recExam","recDx","recPlan","recProg"];
+      fields.forEach(id=>{
+        $("#"+id).addEventListener("input", ()=>{
+          scheduleAutosave();
+        });
+      });
+    }
+    function scheduleAutosave(){
+      if(state.autosaveTimer) clearTimeout(state.autosaveTimer);
+      state.autosaveTimer = setTimeout(async ()=>{
+        await saveRecord().catch(()=>{});
+      }, 650);
+    }
+
+    // ---------- Odontogram logic ----------
+    function getOdo(patientId){
+      if(!patientId) return null;
+      if(!state.odontograms[patientId]){
+        state.odontograms[patientId] = { patientId, teeth:{}, updatedAt: Date.now(), createdAt: Date.now() };
+        // init all teeth
+        for(const t of TEETH){
+          state.odontograms[patientId].teeth[t] = { status:"normal", note:"" };
+        }
+      }else{
+        // ensure all teeth exist (compat)
+        for(const t of TEETH){
+          if(!state.odontograms[patientId].teeth[t]) state.odontograms[patientId].teeth[t] = { status:"normal", note:"" };
+        }
+      }
+      return state.odontograms[patientId];
+    }
+
+    function statusObj(key){ return ODO_STATUSES.find(s=>s.key===key) || ODO_STATUSES[0]; }
+
+    async function saveOdontogram(patientId){
+      const o = getOdo(patientId);
+      if(!o) return;
+      o.updatedAt = Date.now();
+      await idbPut("odontograms", o);
+      await loadAll();
+      refreshCounts();
+    }
+
+    function renderLegend(){
+      const el = $("#odoLegend");
+      el.innerHTML = "";
+      for(const st of ODO_STATUSES){
+        const div = document.createElement("div");
+        div.className="legend-item";
+        div.innerHTML = `<span class="swatch" style="background:${st.color}"></span> ${st.label}`;
+        el.appendChild(div);
+      }
+    }
+
+    let selectedTooth = null;
+
+    function renderOdontogram(){
+      renderLegend();
+      const patientId = $("#odoPatient").value || state.selectedOdoPatientId || (state.patients[0]?.id || "");
+      if(!patientId){
+        $("#odoGrid").innerHTML = `<div class="muted">Cadastre um paciente primeiro.</div>`;
+        return;
+      }
+      $("#odoPatient").value = patientId;
+      state.selectedOdoPatientId = patientId;
+
+      const o = getOdo(patientId);
+      const grid = $("#odoGrid");
+      grid.innerHTML = "";
+
+      // Set note field from current selection
+      if(selectedTooth && o?.teeth[selectedTooth]){
+        $("#odoNote").value = o.teeth[selectedTooth].note || "";
+      }else{
+        $("#odoNote").value = "";
+      }
+
+      for(const t of TEETH){
+        const tooth = o.teeth[t];
+        const st = statusObj(tooth.status);
+        const div = document.createElement("div");
+        div.className="tooth";
+        div.dataset.tooth = t;
+        div.style.borderColor = (selectedTooth===t) ? "rgba(37,99,235,.55)" : "rgba(148,163,184,.16)";
+        div.style.boxShadow = (selectedTooth===t) ? "0 0 0 3px rgba(37,99,235,.16)" : "none";
+        div.innerHTML = `
+          <div class="n">Dente ${t}</div>
+          <div class="status" style="border-color:${st.color}33; background:${st.color}18; color:${st.color}">
+            ${st.label}
+          </div>
+          <div class="note">${safeText(tooth.note).slice(0,80) || "<span class='muted'>toque para editar</span>"}</div>
+        `;
+        div.addEventListener("click", async ()=>{
+          selectedTooth = t;
+          // ciclo de status
+          const idx = ODO_STATUSES.findIndex(s=>s.key===tooth.status);
+          tooth.status = ODO_STATUSES[(idx+1) % ODO_STATUSES.length].key;
+          $("#odoNote").value = tooth.note || "";
+          await saveOdontogram(patientId);
+          renderOdontogram();
+        });
+
+        div.addEventListener("contextmenu", (e)=>{
+          e.preventDefault();
+          // toque longo não existe bem no browser; contexto como reset do dente
+          tooth.status = "normal";
+          tooth.note = "";
+          selectedTooth = t;
+          saveOdontogram(patientId).then(()=> renderOdontogram());
+        });
+
+        grid.appendChild(div);
+      }
+    }
+
+    async function saveToothNote(){
+      const patientId = $("#odoPatient").value;
+      if(!patientId){ toast("Selecione um paciente."); return; }
+      if(!selectedTooth){ toast("Toque em um dente antes."); return; }
+      const o = getOdo(patientId);
+      o.teeth[selectedTooth].note = $("#odoNote").value.trim();
+      await saveOdontogram(patientId);
+      toast("Nota do dente salva ✅");
+      renderOdontogram();
+    }
+
+    async function clearOdontogram(){
+      const patientId = $("#odoPatient").value;
+      if(!patientId) return;
+      if(!confirm("Limpar odontograma deste paciente?")) return;
+      const o = getOdo(patientId);
+      for(const t of TEETH){
+        o.teeth[t] = { status:"normal", note:"" };
+      }
+      selectedTooth = null;
+      await saveOdontogram(patientId);
+      toast("Odontograma limpo ✅");
+      renderOdontogram();
+    }
+
+    // ---------- Documents ----------
+    async function saveDocument(){
+      const patientId = $("#docPatient").value;
+      if(!patientId){ toast("Selecione um paciente."); return; }
+      const type = $("#docType").value;
+      const doc = {
+        id: state.selectedDocId || uid(),
+        patientId,
+        date: $("#docDate").value || todayISO(),
+        type,
+        title: $("#docTitle").value.trim(),
+        body: $("#docBody").value,
+        createdAt: state.selectedDocId ? (state.documents.find(d=>d.id===state.selectedDocId)?.createdAt || Date.now()) : Date.now(),
+        updatedAt: Date.now()
+      };
+      await idbPut("documents", doc);
+      state.selectedDocId = null;
+      await loadAll();
+      refreshAll();
+      toast("Documento salvo ✅");
+    }
+
+    function loadDocumentToForm(id){
+      const d = state.documents.find(x=>x.id===id);
+      if(!d) return;
+      state.selectedDocId = id;
+      $("#docPatient").value = d.patientId;
+      $("#docDate").value = d.date || todayISO();
+      $("#docType").value = d.type || "receituario";
+      $("#docTitle").value = d.title || "";
+      $("#docBody").value = d.body || "";
+      toast("Documento carregado ✍️");
+      go("docs");
+    }
+
+    async function deleteDocument(id){
+      if(!confirm("Excluir este documento?")) return;
+      await idbDel("documents", id);
+      await loadAll();
+      renderDocuments();
+      refreshCounts();
+      toast("Documento excluído 🗑️");
+    }
+
+    // ---------- Rendering: selects & counts ----------
+    function refreshCounts(){
+      $("#patientsCount").textContent = state.patients.length;
+      $("#patientsCount2").textContent = state.patients.length;
+      $("#apptsCount").textContent = state.appointments.length;
+      $("#docsCount").textContent = state.documents.length;
+      $("#docsCount2").textContent = state.documents.length;
+    }
+
+    function refreshAllSelects(){
+      const opts = state.patients
+        .slice()
+        .sort((a,b)=> (a.name||"").localeCompare(b.name||""))
+        .map(p=> `<option value="${p.id}">${escapeHtml(p.name)}${p.phone?` — ${escapeHtml(p.phone)}`:""}</option>`).join("");
+
+      const ids = ["apptPatient","recPatient","odoPatient","docPatient","printQuickPatient"];
+      for(const id of ids){
+        const sel = $("#"+id);
+        if(!sel) continue;
+        const prev = sel.value;
+        sel.innerHTML = `<option value="">Selecione...</option>` + opts;
+        // restore selection if still exists
+        if(prev && state.patients.some(p=>p.id===prev)) sel.value = prev;
+      }
+
+      // default selections
+      if(!$("#apptPatient").value && state.patients[0]) $("#apptPatient").value = state.patients[0].id;
+      if(!$("#recPatient").value && state.patients[0]) $("#recPatient").value = state.patients[0].id;
+      if(!$("#odoPatient").value && state.patients[0]) $("#odoPatient").value = state.patients[0].id;
+      if(!$("#docPatient").value && state.patients[0]) $("#docPatient").value = state.patients[0].id;
+
+      // keep state
+      state.selectedRecordPatientId = $("#recPatient").value || state.selectedRecordPatientId;
+      state.selectedOdoPatientId = $("#odoPatient").value || state.selectedOdoPatientId;
+      state.selectedDocPatientId = $("#docPatient").value || state.selectedDocPatientId;
+    }
+
+    // ---------- Render patients list ----------
+    function renderPatients(){
+      refreshCounts();
+      const q = ($("#patientSearch").value || "").toLowerCase().trim();
+      const sort = $("#patientSort").value;
+
+      let list = state.patients.slice();
+      if(q){
+        list = list.filter(p=>{
+          const hay = `${p.name||""} ${p.phone||""} ${p.doc||""}`.toLowerCase();
+          return hay.includes(q);
+        });
+      }
+
+      if(sort==="nameAsc") list.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+      if(sort==="nameDesc") list.sort((a,b)=>(b.name||"").localeCompare(a.name||""));
+      if(sort==="recent") list.sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+
+      const wrap = $("#patientList");
+      wrap.innerHTML = "";
+
+      if(!list.length){
+        wrap.innerHTML = `<div class="muted">Nenhum paciente encontrado.</div>`;
+        return;
+      }
+
+      for(const p of list){
+        const item = document.createElement("div");
+        item.className = "item";
+        item.innerHTML = `
+          <div class="meta">
+            <div class="title">${escapeHtml(p.name)}</div>
+            <div class="desc">
+              ${p.phone?`📱 ${escapeHtml(p.phone)} &nbsp;`:""}
+              ${p.birth?`🎂 ${escapeHtml(fmtDate(p.birth))} &nbsp;`:""}
+              ${p.doc?`🪪 ${escapeHtml(p.doc)} &nbsp;`:""}
+            </div>
+            <div class="desc">${p.addr?`📍 ${escapeHtml(p.addr)}`:""}</div>
+          </div>
+          <div class="actions">
+            <button class="btn" data-open="${p.id}">Abrir</button>
+            <button class="btn" data-record="${p.id}">Prontuário</button>
+            <button class="btn" data-odo="${p.id}">Odonto</button>
+            <button class="btn" data-edit="${p.id}">Editar</button>
+            <button class="btn danger" data-del="${p.id}">Excluir</button>
+          </div>
+        `;
+        wrap.appendChild(item);
+
+        item.querySelector("[data-open]").addEventListener("click", ()=>{
+          state.selectedPatientId = p.id;
+          renderPatientPanel();
+          toast("Paciente selecionado ✅");
+        });
+        item.querySelector("[data-record]").addEventListener("click", ()=>{
+          state.selectedRecordPatientId = p.id;
+          $("#recPatient").value = p.id;
+          loadRecordIntoForm(p.id);
+          go("record");
+        });
+        item.querySelector("[data-odo]").addEventListener("click", ()=>{
+          state.selectedOdoPatientId = p.id;
+          $("#odoPatient").value = p.id;
+          selectedTooth = null;
+          go("odo");
+          renderOdontogram();
+        });
+        item.querySelector("[data-edit]").addEventListener("click", ()=> editPatient(p.id));
+        item.querySelector("[data-del]").addEventListener("click", ()=> deletePatient(p.id));
+      }
+    }
+
+    function renderPatientPanel(){
+      const panel = $("#patientPanel");
+      const id = state.selectedPatientId || state.patients[0]?.id || null;
+      if(!id){
+        panel.innerHTML = `<div class="muted">Cadastre um paciente para começar.</div>`;
+        return;
+      }
+      state.selectedPatientId = id;
+      const p = state.patients.find(x=>x.id===id);
+      if(!p) return;
+
+      const rec = state.records.find(r=>r.patientId===id);
+      const appts = state.appointments
+        .filter(a=>a.patientId===id)
+        .sort((a,b)=> (b.datetime||"").localeCompare(a.datetime||""))
+        .slice(0,4);
+
+      const docs = state.documents
+        .filter(d=>d.patientId===id)
+        .sort((a,b)=> (b.updatedAt||0)-(a.updatedAt||0))
+        .slice(0,4);
+
+      const atts = state.attachments
+        .filter(a=>a.patientId===id)
+        .sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
+
+      panel.innerHTML = `
+        <div class="note-box">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
+            <div>
+              <div style="font-weight:900;font-size:16px">${escapeHtml(p.name)}</div>
+              <div class="muted" style="margin-top:4px;line-height:1.5;font-size:13px">
+                ${p.phone?`📱 ${escapeHtml(p.phone)}<br>`:""}
+                ${p.birth?`🎂 ${escapeHtml(fmtDate(p.birth))}<br>`:""}
+                ${p.doc?`🪪 ${escapeHtml(p.doc)}<br>`:""}
+                ${p.addr?`📍 ${escapeHtml(p.addr)}`:""}
+              </div>
+            </div>
+            <div class="row" style="flex:0 0 auto; justify-content:flex-end">
+              <button class="btn" id="ppToRecord">Abrir prontuário</button>
+              <button class="btn" id="ppToOdo">Abrir odontograma</button>
+              <button class="btn primary" id="ppPrintFicha">Imprimir ficha</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="two">
+          <div class="note-box">
+            <div style="font-weight:900;margin-bottom:8px">Últimos agendamentos</div>
+            ${appts.length ? appts.map(a=>`
+              <div class="item" style="margin-bottom:8px">
+                <div class="meta">
+                  <div class="title">${escapeHtml(fmtDateTime(a.datetime))}</div>
+                  <div class="desc">${escapeHtml(a.note||"")}</div>
+                </div>
+                <div class="actions">
+                  ${badgeForAppt(a.status)}
+                </div>
+              </div>
+            `).join("") : `<div class="muted">Sem agendamentos.</div>`}
+          </div>
+
+          <div class="note-box">
+            <div style="font-weight:900;margin-bottom:8px">Anexos</div>
+            <div class="row" style="margin-bottom:10px">
+              <label class="btn" style="cursor:pointer">
+                <input type="file" id="attachInput" style="display:none" />
+                Adicionar anexo
+              </label>
+            </div>
+            ${atts.length ? atts.map(a=>`
+              <div class="item" style="margin-bottom:8px">
+                <div class="meta">
+                  <div class="title">${escapeHtml(a.name)}</div>
+                  <div class="desc">${escapeHtml((a.type||"").slice(0,45))} • ${(a.size/1024).toFixed(1)} KB</div>
+                </div>
+                <div class="actions">
+                  <button class="btn" data-dl="${a.id}">Baixar</button>
+                  <button class="btn danger" data-delatt="${a.id}">Excluir</button>
+                </div>
+              </div>
+            `).join("") : `<div class="muted">Sem anexos.</div>`}
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="note-box">
+          <div style="font-weight:900;margin-bottom:8px">Últimos documentos</div>
+          ${docs.length ? docs.map(d=>`
+            <div class="item" style="margin-bottom:8px">
+              <div class="meta">
+                <div class="title">${escapeHtml(docTypeLabel(d.type))} • ${escapeHtml(fmtDate(d.date))}</div>
+                <div class="desc">${escapeHtml((d.title||"").trim() || "Sem título")} — ${escapeHtml((d.body||"").trim().slice(0,90))}${(d.body||"").length>90?"…":""}</div>
+              </div>
+              <div class="actions">
+                <button class="btn" data-opendoc="${d.id}">Abrir</button>
+                <button class="btn" data-printdoc="${d.id}">Imprimir</button>
+              </div>
+            </div>
+          `).join("") : `<div class="muted">Sem documentos salvos.</div>`}
+        </div>
+      `;
+
+      $("#ppToRecord").addEventListener("click", ()=>{
+        $("#recPatient").value = id;
+        loadRecordIntoForm(id);
+        go("record");
+      });
+      $("#ppToOdo").addEventListener("click", ()=>{
+        $("#odoPatient").value = id;
+        state.selectedOdoPatientId = id;
+        selectedTooth = null;
+        go("odo");
+        renderOdontogram();
+      });
+      $("#ppPrintFicha").addEventListener("click", ()=>{
+        $("#printModal").classList.add("active");
+        buildPrintFicha(id);
+      });
+
+      $("#attachInput").addEventListener("change", async (e)=>{
+        const f = e.target.files?.[0];
+        if(!f) return;
+        await addAttachment(id, f);
+        e.target.value="";
+      });
+
+      $$("[data-dl]", panel).forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const att = state.attachments.find(a=>a.id===btn.dataset.dl);
+          if(att) downloadAttachment(att);
+        });
+      });
+      $$("[data-delatt]", panel).forEach(btn=>{
+        btn.addEventListener("click", ()=> deleteAttachment(btn.dataset.delatt));
+      });
+
+      $$("[data-opendoc]", panel).forEach(btn=>{
+        btn.addEventListener("click", ()=> loadDocumentToForm(btn.dataset.opendoc));
+      });
+      $$("[data-printdoc]", panel).forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          $("#printModal").classList.add("active");
+          buildPrintDoc(btn.dataset.printdoc);
+        });
+      });
+    }
+
+    // ---------- Render appointments ----------
+    function renderAppointments(){
+      refreshCounts();
+
+      const dateFilter = $("#apptFilterDate").value;
+      const q = ($("#apptSearch").value || "").toLowerCase().trim();
+
+      let list = state.appointments.slice().sort((a,b)=> (a.datetime||"").localeCompare(b.datetime||""));
+      if(dateFilter){
+        list = list.filter(a=> toISODate(new Date(a.datetime)) === dateFilter);
+      }
+      if(q){
+        list = list.filter(a=>{
+          const p = state.patients.find(x=>x.id===a.patientId);
+          const hay = `${p?.name||""} ${p?.phone||""} ${a.status||""} ${a.note||""}`.toLowerCase();
+          return hay.includes(q);
+        });
+      }
+
+      const wrap = $("#apptList");
+      wrap.innerHTML = "";
+      if(!list.length){
+        wrap.innerHTML = `<div class="muted">Nenhum agendamento.</div>`;
+        return;
+      }
+
+      for(const a of list){
+        const p = state.patients.find(x=>x.id===a.patientId);
+        const item = document.createElement("div");
+        item.className="item";
+        item.innerHTML = `
+          <div class="meta">
+            <div class="title">${escapeHtml(fmtDateTime(a.datetime))} — ${escapeHtml(p?.name||"Paciente")}</div>
+            <div class="desc">${escapeHtml(a.note||"")}</div>
+            <div class="desc">${p?.phone?`📱 ${escapeHtml(p.phone)}`:""}</div>
+          </div>
+          <div class="actions">
+            ${badgeForAppt(a.status)}
+            <button class="btn" data-toggle="${a.id}">Trocar status</button>
+            <button class="btn" data-open="${a.patientId}">Abrir paciente</button>
+            <button class="btn danger" data-del="${a.id}">Excluir</button>
+          </div>
+        `;
+        wrap.appendChild(item);
+
+        item.querySelector("[data-toggle]").addEventListener("click", ()=> toggleApptStatus(a.id));
+        item.querySelector("[data-open]").addEventListener("click", ()=>{
+          state.selectedPatientId = a.patientId;
+          go("patients");
+          renderPatientPanel();
+        });
+        item.querySelector("[data-del]").addEventListener("click", ()=> deleteAppointment(a.id));
+      }
+
+      // Today count for dashboard
+      const today = $("#dashDate").value || todayISO();
+      $("#todayCount").textContent = state.appointments.filter(a=> toISODate(new Date(a.datetime))===today).length;
+    }
+
+    // ---------- Render documents ----------
+    function renderDocuments(){
+      refreshCounts();
+      const q = ($("#docSearch").value || "").toLowerCase().trim();
+      let list = state.documents.slice().sort((a,b)=> (b.updatedAt||0)-(a.updatedAt||0));
+      if(q){
+        list = list.filter(d=>{
+          const p = state.patients.find(x=>x.id===d.patientId);
+          const hay = `${p?.name||""} ${d.type||""} ${d.title||""} ${d.body||""}`.toLowerCase();
+          return hay.includes(q);
+        });
+      }
+
+      const wrap = $("#docList");
+      wrap.innerHTML = "";
+      if(!list.length){
+        wrap.innerHTML = `<div class="muted">Nenhum documento.</div>`;
+        return;
+      }
+      for(const d of list){
+        const p = state.patients.find(x=>x.id===d.patientId);
+        const item = document.createElement("div");
+        item.className="item";
+        item.innerHTML = `
+          <div class="meta">
+            <div class="title">${escapeHtml(docTypeLabel(d.type))} — ${escapeHtml(p?.name||"Paciente")} • ${escapeHtml(fmtDate(d.date))}</div>
+            <div class="desc">${escapeHtml((d.title||"").trim() || "Sem título")} — ${escapeHtml((d.body||"").trim().slice(0,120))}${(d.body||"").length>120?"…":""}</div>
+          </div>
+          <div class="actions">
+            <button class="btn" data-open="${d.id}">Abrir</button>
+            <button class="btn" data-print="${d.id}">Imprimir</button>
+            <button class="btn danger" data-del="${d.id}">Excluir</button>
+          </div>
+        `;
+        wrap.appendChild(item);
+
+        item.querySelector("[data-open]").addEventListener("click", ()=> loadDocumentToForm(d.id));
+        item.querySelector("[data-print]").addEventListener("click", ()=>{
+          $("#printModal").classList.add("active");
+          buildPrintDoc(d.id);
+        });
+        item.querySelector("[data-del]").addEventListener("click", ()=> deleteDocument(d.id));
+      }
+    }
+
+    // ---------- Dashboard ----------
+    function renderDashboard(){
+      refreshCounts();
+      const date = $("#dashDate").value || todayISO();
+      $("#dashDate").value = date;
+
+      const list = state.appointments
+        .filter(a=> toISODate(new Date(a.datetime))===date)
+        .sort((a,b)=> (a.datetime||"").localeCompare(b.datetime||""));
+
+      $("#todayCount").textContent = list.length;
+
+      const wrap = $("#dashAppts");
+      wrap.innerHTML = "";
+      if(!list.length){
+        wrap.innerHTML = `<div class="muted">Sem agendamentos nessa data.</div>`;
+        return;
+      }
+      for(const a of list.slice(0,6)){
+        const p = state.patients.find(x=>x.id===a.patientId);
+        const div = document.createElement("div");
+        div.className="item";
+        div.innerHTML = `
+          <div class="meta">
+            <div class="title">${escapeHtml(fmtDateTime(a.datetime))} — ${escapeHtml(p?.name||"Paciente")}</div>
+            <div class="desc">${escapeHtml(a.note||"")}</div>
+          </div>
+          <div class="actions">
+            ${badgeForAppt(a.status)}
+            <button class="btn" data-open="${a.patientId}">Abrir</button>
+          </div>
+        `;
+        wrap.appendChild(div);
+        div.querySelector("[data-open]").addEventListener("click", ()=>{
+          state.selectedPatientId = a.patientId;
+          go("patients");
+          renderPatientPanel();
+        });
+      }
+    }
+
+    // ---------- Badges ----------
+    function badgeForAppt(status){
+      const s = status || "pendente";
+      if(s==="confirmado") return `<span class="badge good">Confirmado</span>`;
+      if(s==="concluido") return `<span class="badge good">Concluído</span>`;
+      if(s==="faltou") return `<span class="badge bad">Faltou</span>`;
+      if(s==="reagendado") return `<span class="badge warn">Reagendado</span>`;
+      return `<span class="badge">Pendente</span>`;
+    }
+    function docTypeLabel(t){
+      const map = { receituario:"Receituário", atestado:"Atestado", orcamento:"Orçamento", laudo:"Laudo/Declaração" };
+      return map[t] || "Documento";
+    }
+
+    // ---------- Printing (A4 pagination “inquebrável”) ----------
+    function openPrint(){
+      $("#printModal").classList.add("active");
+    }
+    function closePrint(){
+      $("#printModal").classList.remove("active");
+    }
+    function clearPrint(){
+      $("#printArea").innerHTML = `<div class="muted">Gere um documento para pré-visualizar.</div>`;
+    }
+
+    function setPrintArea(pages){
+      const area = $("#printArea");
+      area.innerHTML = "";
+      for(const page of pages) area.appendChild(page);
+    }
+
+    function makeA4Page(title, subtitle, rightMeta){
+      const page = document.createElement("div");
+      page.className = "a4-page";
+      const inner = document.createElement("div");
+      inner.className = "a4-inner";
+
+      const prof = state.meta.professional || {};
+      const meta = rightMeta || "";
+      inner.innerHTML = `
+        <div class="a4-head">
+          <div class="a4-brand">
+            <div class="a4-logo"></div>
+            <div class="a4-title">
+              <b>BTX Clinic — ${escapeHtml(title)}</b>
+              <small>${escapeHtml(subtitle || "")}</small>
+            </div>
+          </div>
+          <div class="a4-meta">
+            ${meta ? `<div>${escapeHtml(meta)}</div>`:""}
+            <div>${escapeHtml(prof.name || "")}</div>
+            <div>${escapeHtml(prof.reg || "")}</div>
+            <div>${escapeHtml(prof.phone || "")}</div>
+          </div>
+        </div>
+      `;
+      page.appendChild(inner);
+
+      const foot = document.createElement("div");
+      foot.className = "a4-foot";
+      foot.innerHTML = `
+        <span>${escapeHtml(prof.addr || "")}</span>
+        <span>Gerado em ${escapeHtml(fmtDateTime(new Date().toISOString()))}</span>
+      `;
+      page.appendChild(foot);
+
+      return { page, inner };
+    }
+
+    function mkSection(title, htmlOrText, isText=false){
+      const sec = document.createElement("div");
+      sec.className = "a4-section";
+      sec.innerHTML = `<h3>${escapeHtml(title)}</h3>`;
+      const box = document.createElement("div");
+      box.className = "a4-text";
+      if(isText) box.textContent = htmlOrText || "";
+      else box.innerHTML = htmlOrText || "";
+      sec.appendChild(box);
+      return sec;
+    }
+
+    function mkKV(items){
+      const wrap = document.createElement("div");
+      wrap.className="a4-section";
+      const kv = document.createElement("div");
+      kv.className="a4-kv";
+      for(const it of items){
+        const d = document.createElement("div");
+        d.className="kv";
+        d.innerHTML = `<div class="k">${escapeHtml(it.k)}</div><div class="v">${escapeHtml(it.v||"")}</div>`;
+        kv.appendChild(d);
+      }
+      wrap.appendChild(kv);
+      return wrap;
+    }
+
+    // Core pagination: packs blocks into A4 pages by measuring height
+    function paginateBlocks(title, subtitle, rightMeta, blocks){
+      const pages = [];
+      const measureRoot = document.createElement("div");
+      measureRoot.style.position="fixed";
+      measureRoot.style.left="-9999px";
+      measureRoot.style.top="0";
+      measureRoot.style.width="210mm";
+      document.body.appendChild(measureRoot);
+
+      let { page, inner } = makeA4Page(title, subtitle, rightMeta);
+      measureRoot.appendChild(page);
+
+      const usableHeight = () => {
+        // inner clientHeight includes head; we want max height within page minus footer overlap area.
+        // We'll use page height minus padding & footer safe: approximate.
+        // We'll check overflow by comparing inner.scrollHeight with max.
+        return 297 * 3.78; // ~ px per mm at 96dpi; used only as fallback
+      };
+
+      const finalizePage = ()=>{
+        measureRoot.removeChild(page);
+        pages.push(page);
+        // new page
+        ({ page, inner } = makeA4Page(title, subtitle, rightMeta));
+        measureRoot.appendChild(page);
+      };
+
+      // We'll check overflow by comparing inner.scrollHeight against pageHeight minus footer area.
+      const pageHeightPx = page.getBoundingClientRect().height || usableHeight();
+      const footerSafePx = 40; // keep away from footer region
+      const maxInnerPx = pageHeightPx - footerSafePx;
+
+      for(const b of blocks){
+        inner.appendChild(b);
+        if(inner.scrollHeight > maxInnerPx){
+          // remove and put on next page
+          inner.removeChild(b);
+          finalizePage();
+          inner.appendChild(b);
+
+          // if a single block is too large, split by text lines (best-effort)
+          if(inner.scrollHeight > maxInnerPx){
+            // attempt split if it's a text box section
+            const split = trySplitBlock(b, maxInnerPx, inner);
+            if(split && split.length){
+              inner.removeChild(b);
+              for(const part of split){
+                inner.appendChild(part);
+                if(inner.scrollHeight > maxInnerPx){
+                  inner.removeChild(part);
+                  finalizePage();
+                  inner.appendChild(part);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // push last page if it has content beyond header
+      pages.push(page);
+      document.body.removeChild(measureRoot);
+      return pages;
+    }
+
+    function trySplitBlock(block, maxInnerPx, inner){
+      // Only split sections with .a4-text (textContent) inside
+      const textBox = block.querySelector?.(".a4-text");
+      if(!textBox) return null;
+      const raw = textBox.textContent || "";
+      if(raw.length < 200) return null;
+
+      const lines = raw.split(/\n/);
+      if(lines.length < 4) return null;
+
+      const title = block.querySelector("h3")?.textContent || "Conteúdo";
+
+      // Binary split lines into chunks that fit
+      const chunks = [];
+      let cur = [];
+      const flush = ()=>{
+        if(!cur.length) return;
+        const sec = document.createElement("div");
+        sec.className="a4-section";
+        sec.innerHTML = `<h3>${escapeHtml(title)} (continuação)</h3>`;
+        const box = document.createElement("div");
+        box.className="a4-text";
+        box.textContent = cur.join("\n");
+        sec.appendChild(box);
+        chunks.push(sec);
+        cur = [];
+      };
+
+      // test-fit function
+      const fits = (candidateLines)=>{
+        const tmp = document.createElement("div");
+        tmp.className="a4-section";
+        tmp.innerHTML = `<h3>${escapeHtml(title)} (continuação)</h3>`;
+        const box = document.createElement("div");
+        box.className="a4-text";
+        box.textContent = candidateLines.join("\n");
+        tmp.appendChild(box);
+
+        inner.appendChild(tmp);
+        const ok = inner.scrollHeight <= maxInnerPx;
+        inner.removeChild(tmp);
+        return ok;
+      };
+
+      // Greedy chunking
+      for(const ln of lines){
+        const test = cur.concat([ln]);
+        if(fits(test)){
+          cur.push(ln);
+        }else{
+          flush();
+          cur.push(ln);
+        }
+      }
+      flush();
+
+      // First chunk title should be original (not continuação)
+      if(chunks[0]){
+        chunks[0].querySelector("h3").textContent = title;
+      }
+      return chunks.length>1 ? chunks : null;
+    }
+
+    // Build Ficha print
+    function buildPrintFicha(patientId){
+      const p = state.patients.find(x=>x.id===patientId);
+      const rec = state.records.find(r=>r.patientId===patientId) || {};
+      const o = getOdo(patientId);
+
+      const blocks = [];
+
+      blocks.push(mkKV([
+        {k:"Paciente", v: p?.name || ""},
+        {k:"Telefone", v: p?.phone || ""},
+        {k:"Nascimento", v: p?.birth ? fmtDate(p.birth) : "" },
+        {k:"Documento", v: p?.doc || "" },
+        {k:"Endereço", v: p?.addr || "" },
+        {k:"Data do registro", v: rec?.date ? fmtDate(rec.date) : fmtDate(todayISO()) }
+      ]));
+
+      blocks.push(mkSection("Queixa principal", rec.qp || "", true));
+      blocks.push(mkSection("Anamnese", rec.hx || "", true));
+      blocks.push(mkSection("Antecedentes / Medicações / Alergias", rec.pmh || "", true));
+      blocks.push(mkSection("Exame", rec.exam || "", true));
+      blocks.push(mkSection("Diagnóstico", rec.dx || "", true));
+      blocks.push(mkSection("Conduta / Tratamento", rec.plan || "", true));
+      blocks.push(mkSection("Evolução", rec.prog || "", true));
+
+      // Odontogram summary
+      const odoSum = summarizeOdontogram(o);
+      blocks.push(mkSection("Odontograma (resumo)", odoSum || "Sem marcações.", true));
+
+      const pages = paginateBlocks("Ficha Clínica", p?.name || "Paciente", `Data: ${fmtDate(todayISO())}`, blocks);
+      setPrintArea(pages);
+    }
+
+    function summarizeOdontogram(o){
+      if(!o || !o.teeth) return "";
+      const lines = [];
+      for(const t of TEETH){
+        const tooth = o.teeth[t];
+        if(!tooth) continue;
+        if(tooth.status && tooth.status !== "normal"){
+          const st = statusObj(tooth.status);
+          lines.push(`Dente ${t}: ${st.label}${tooth.note?` — ${tooth.note}`:""}`);
+        }
+      }
+      return lines.join("\n");
+    }
+
+    // Build Odontogram print (grid summary)
+    function buildPrintOdo(patientId){
+      const p = state.patients.find(x=>x.id===patientId);
+      const o = getOdo(patientId);
+
+      const blocks = [];
+      blocks.push(mkKV([
+        {k:"Paciente", v: p?.name || ""},
+        {k:"Telefone", v: p?.phone || ""},
+        {k:"Data", v: fmtDate(todayISO())},
+        {k:"Resumo", v: "Odontograma por status + observações"}
+      ]));
+
+      const lines = [];
+      for(const t of TEETH){
+        const tooth = o?.teeth?.[t];
+        if(!tooth) continue;
+        const st = statusObj(tooth.status);
+        if(tooth.status !== "normal" || (tooth.note||"").trim()){
+          lines.push(`Dente ${t}: ${st.label}${tooth.note?` — ${tooth.note}`:""}`);
+        }
+      }
+      blocks.push(mkSection("Marcações", lines.length ? lines.join("\n") : "Sem marcações.", true));
+
+      const pages = paginateBlocks("Odontograma", p?.name || "Paciente", `Data: ${fmtDate(todayISO())}`, blocks);
+      setPrintArea(pages);
+    }
+
+    // Build Agenda print (day report)
+    function buildPrintAgendaDay(dateISO){
+      const date = dateISO || todayISO();
+      const appts = state.appointments
+        .filter(a=> toISODate(new Date(a.datetime))===date)
+        .sort((a,b)=> (a.datetime||"").localeCompare(b.datetime||""));
+
+      const blocks = [];
+      blocks.push(mkKV([
+        {k:"Data", v: fmtDate(date)},
+        {k:"Total", v: String(appts.length)},
+        {k:"Clínica", v: "BTX Clinic"},
+        {k:"Tipo", v: "Relatório de Agenda (dia)"}
+      ]));
+
+      const text = appts.map(a=>{
+        const p = state.patients.find(x=>x.id===a.patientId);
+        const hhmm = new Date(a.datetime).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+        return `${hhmm} — ${p?.name||"Paciente"} — ${a.status.toUpperCase()}${a.note?` — ${a.note}`:""}${p?.phone?` — ${p.phone}`:""}`;
+      }).join("\n");
+
+      blocks.push(mkSection("Agendamentos", text || "Sem agendamentos.", true));
+
+      const pages = paginateBlocks("Agenda", `Dia ${fmtDate(date)}`, "", blocks);
+      setPrintArea(pages);
+    }
+
+    // Build generic doc print
+    function buildPrintDoc(docId){
+      const d = state.documents.find(x=>x.id===docId) || null;
+      if(!d){ toast("Documento não encontrado."); return; }
+      const p = state.patients.find(x=>x.id===d.patientId);
+      const title = docTypeLabel(d.type);
+      const blocks = [];
+
+      blocks.push(mkKV([
+        {k:"Paciente", v: p?.name || ""},
+        {k:"Telefone", v: p?.phone || ""},
+        {k:"Documento", v: title},
+        {k:"Data", v: fmtDate(d.date || todayISO())}
+      ]));
+
+      if((d.title||"").trim()){
+        blocks.push(mkSection("Título", d.title, true));
+      }
+
+      blocks.push(mkSection("Conteúdo", d.body || "", true));
+
+      // assinatura (linha)
+      const sign = document.createElement("div");
+      sign.className="a4-section";
+      sign.innerHTML = `
+        <h3>Assinatura</h3>
+        <div class="a4-text" style="background:#fff;border-color:rgba(37,99,235,.22)">
+          <div style="height:34px"></div>
+          <div style="border-top:1px solid rgba(15,23,42,.35); padding-top:6px; color:#0F172A">
+            ${escapeHtml(state.meta.professional.name || "")} ${escapeHtml(state.meta.professional.reg?("— "+state.meta.professional.reg):"")}
+          </div>
+        </div>
+      `;
+      blocks.push(sign);
+
+      const pages = paginateBlocks(title, p?.name || "Paciente", `Data: ${fmtDate(d.date || todayISO())}`, blocks);
+      setPrintArea(pages);
+    }
+
+    // Quick print selector
+    function generateQuick(){
+      const type = $("#printQuickType").value;
+      const patientId = $("#printQuickPatient").value;
+      const date = $("#printQuickDate").value || todayISO();
+
+      if(type==="agendaDia"){
+        buildPrintAgendaDay(date);
+        return;
+      }
+      if(type==="ficha"){
+        if(!patientId){ toast("Selecione um paciente."); return; }
+        buildPrintFicha(patientId);
+        return;
+      }
+      if(type==="odontograma"){
+        if(!patientId){ toast("Selecione um paciente."); return; }
+        buildPrintOdo(patientId);
+        return;
+      }
+      if(type==="documento"){
+        // print currently selected document (form)
+        const currentId = state.selectedDocId;
+        if(!currentId){ toast("Abra um documento na aba Docs para imprimir."); return; }
+        buildPrintDoc(currentId);
+        return;
+      }
+    }
+
+    // ---------- Backup ----------
+    async function exportBackup(){
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        meta: state.meta,
+        patients: state.patients,
+        appointments: state.appointments,
+        records: state.records,
+        odontograms: Object.values(state.odontograms),
+        documents: state.documents,
+        // attachments: convert blobs to base64 (atenção: pode ficar grande)
+        attachments: await Promise.all(state.attachments.map(async a=>{
+          return {
+            ...a,
+            blob: await blobToDataURL(a.blob)
+          };
+        }))
+      };
+      const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `BTX_Clinic_Backup_${toISODate(new Date())}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 5000);
+      toast("Backup exportado ✅");
+    }
+
+    async function importBackup(file){
+      const txt = await file.text();
+      let data;
+      try{ data = JSON.parse(txt); }catch(e){ toast("Arquivo inválido."); return; }
+
+      // Wipe stores then import
+      await wipeAll(false);
+
+      // meta
+      if(data.meta?.professional){
+        await idbPut("meta",{ key:"professional", value:data.meta.professional });
+      }
+
+      // patients
+      for(const p of (data.patients||[])) await idbPut("patients", p);
+      for(const a of (data.appointments||[])) await idbPut("appointments", a);
+      for(const r of (data.records||[])) await idbPut("records", r);
+      for(const o of (data.odontograms||[])) await idbPut("odontograms", o);
+      for(const d of (data.documents||[])) await idbPut("documents", d);
+
+      // attachments decode
+      for(const at of (data.attachments||[])){
+        const blob = await dataURLToBlob(at.blob);
+        const clean = { ...at, blob };
+        await idbPut("attachments", clean);
+      }
+
+      await loadMeta();
+      await loadAll();
+      refreshAll();
+      toast("Backup importado ✅");
+    }
+
+    async function wipeAll(ask=true){
+      if(ask && !confirm("Zerar tudo? Isso apaga pacientes, agenda, documentos, odontograma e anexos.")) return;
+
+      // Delete DB entirely and recreate
+      await new Promise((resolve, reject)=>{
+        const req = indexedDB.deleteDatabase(DB_NAME);
+        req.onsuccess=()=>resolve(true);
+        req.onerror=()=>reject(req.error);
+        req.onblocked=()=>resolve(true);
+      });
+
+      await openDB();
+      state.selectedPatientId=null;
+      state.selectedRecordPatientId=null;
+      state.selectedOdoPatientId=null;
+      state.selectedDocId=null;
+
+      // reload
+      await loadMeta();
+      await loadAll();
+      refreshAll();
+      toast("Sistema zerado ✅");
+    }
+
+    // ---------- Search (topbar) ----------
+    function quickSearch(){
+      const q = ($("#quickSearch").value || "").toLowerCase().trim();
+      if(!q){
+        // no action
+        return;
+      }
+      // Try patient match
+      const p = state.patients.find(p=>{
+        const hay = `${p.name||""} ${p.phone||""} ${p.doc||""}`.toLowerCase();
+        return hay.includes(q);
+      });
+      if(p){
+        state.selectedPatientId = p.id;
+        go("patients");
+        renderPatientPanel();
+        return;
+      }
+      // Try appointment match
+      const a = state.appointments.find(a=>{
+        const p = state.patients.find(x=>x.id===a.patientId);
+        const hay = `${p?.name||""} ${a.note||""} ${a.status||""}`.toLowerCase();
+        return hay.includes(q);
+      });
+      if(a){
+        go("agenda");
+        $("#apptSearch").value = q;
+        renderAppointments();
+        return;
+      }
+      toast("Nada encontrado.");
+    }
+
+    // ---------- Toast ----------
+    let toastTimer=null;
+    function toast(msg){
+      let t = $("#toast");
+      if(!t){
+        t = document.createElement("div");
+        t.id="toast";
+        t.style.position="fixed";
+        t.style.left="50%";
+        t.style.bottom="92px";
+        t.style.transform="translateX(-50%)";
+        t.style.padding="10px 12px";
+        t.style.borderRadius="999px";
+        t.style.background="rgba(15,23,42,.82)";
+        t.style.border="1px solid rgba(148,163,184,.18)";
+        t.style.color="white";
+        t.style.zIndex="999";
+        t.style.boxShadow="0 12px 26px rgba(0,0,0,.35)";
+        t.style.maxWidth="92vw";
+        t.style.textAlign="center";
+        t.style.fontSize="13px";
+        t.style.backdropFilter="blur(10px)";
+        document.body.appendChild(t);
+      }
+      t.textContent = msg;
+      t.style.opacity="1";
+      if(toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=>{ t.style.opacity="0"; }, 1800);
+    }
+
+    // ---------- Escape HTML ----------
+    function escapeHtml(str){
+      return (str ?? "").toString()
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    // ---------- Blob helpers for backup ----------
+    function blobToDataURL(blob){
+      return new Promise((resolve)=>{
+        const r = new FileReader();
+        r.onload = ()=> resolve(r.result);
+        r.readAsDataURL(blob);
+      });
+    }
+    async function dataURLToBlob(dataUrl){
+      if(!dataUrl) return new Blob([]);
+      const res = await fetch(dataUrl);
+      return await res.blob();
+    }
+
+    // ---------- Refresh ----------
+    function refreshAll(){
+      refreshAllSelects();
+      refreshCounts();
+      renderDashboard();
+      renderAppointments();
+      renderPatients();
+      renderPatientPanel();
+      renderDocuments();
+      // set defaults
+      $("#apptDateTime").value = $("#apptDateTime").value || nowLocalDT();
+      $("#apptFilterDate").value = $("#apptFilterDate").value || "";
+      $("#docDate").value = $("#docDate").value || todayISO();
+      $("#recDate").value = $("#recDate").value || todayISO();
+      $("#dashDate").value = $("#dashDate").value || todayISO();
+      $("#printQuickDate").value = $("#printQuickDate").value || todayISO();
+      renderOdontogram();
+    }
+
+    // ---------- Events ----------
+    function bindEvents(){
+      // tabs
+      $$(".tab").forEach(t=>{
+        t.addEventListener("click", ()=> go(t.dataset.go));
+      });
+
+      // theme
+      $("#themeBtn").addEventListener("click", ()=>{
+        const cur = document.documentElement.getAttribute("data-theme") || "dark";
+        setTheme(cur==="dark" ? "light" : "dark");
+      });
+
+      // profile
+      $("#saveProfileBtn").addEventListener("click", saveMeta);
+
+      // patients
+      $("#addPatientBtn").addEventListener("click", addOrUpdatePatient);
+      $("#newPatientBtn").addEventListener("click", clearPatientForm);
+      $("#patientSearch").addEventListener("input", renderPatients);
+      $("#patientSort").addEventListener("change", renderPatients);
+
+      // agenda
+      $("#addApptBtn").addEventListener("click", addAppointment);
+      $("#apptFilterDate").addEventListener("change", renderAppointments);
+      $("#apptSearch").addEventListener("input", renderAppointments);
+      $("#clearApptFilterBtn").addEventListener("click", ()=>{
+        $("#apptFilterDate").value="";
+        $("#apptSearch").value="";
+        renderAppointments();
+      });
+      $("#printAgendaBtn").addEventListener("click", ()=>{
+        openPrint();
+        buildPrintAgendaDay($("#apptFilterDate").value || todayISO());
+      });
+
+      // dashboard date
+      $("#dashDate").addEventListener("change", renderDashboard);
+
+      // record patient selection
+      $("#recPatient").addEventListener("change", (e)=> loadRecordIntoForm(e.target.value));
+      $("#saveRecordBtn").addEventListener("click", saveRecord);
+      $("#printRecordBtn").addEventListener("click", ()=>{
+        const pid = $("#recPatient").value;
+        if(!pid){ toast("Selecione um paciente."); return; }
+        openPrint();
+        buildPrintFicha(pid);
+      });
+      $("#gotoOdoBtn").addEventListener("click", ()=>{
+        const pid = $("#recPatient").value;
+        if(!pid){ toast("Selecione um paciente."); return; }
+        $("#odoPatient").value = pid;
+        state.selectedOdoPatientId = pid;
+        selectedTooth = null;
+        go("odo");
+        renderOdontogram();
+      });
+      setupAutosave();
+
+      // odontogram
+      $("#odoPatient").addEventListener("change", ()=>{
+        selectedTooth = null;
+        renderOdontogram();
+      });
+      $("#odoSaveNoteBtn").addEventListener("click", saveToothNote);
+      $("#odoClearBtn").addEventListener("click", clearOdontogram);
+      $("#printOdoBtn").addEventListener("click", ()=>{
+        const pid = $("#odoPatient").value;
+        if(!pid){ toast("Selecione um paciente."); return; }
+        openPrint();
+        buildPrintOdo(pid);
+      });
+
+      // docs
+      $("#saveDocBtn").addEventListener("click", saveDocument);
+      $("#printDocBtn").addEventListener("click", ()=>{
+        if(!state.selectedDocId){
+          toast("Abra/salve um documento antes de imprimir.");
+          return;
+        }
+        openPrint();
+        buildPrintDoc(state.selectedDocId);
+      });
+      $("#docSearch").addEventListener("input", renderDocuments);
+      $("#clearDocSearchBtn").addEventListener("click", ()=>{
+        $("#docSearch").value="";
+        renderDocuments();
+      });
+
+      // central print
+      $("#printCenterBtn").addEventListener("click", ()=>{
+        openPrint();
+      });
+      $("#closePrintBtn").addEventListener("click", closePrint);
+      $("#doPrintBtn").addEventListener("click", ()=> window.print());
+      $("#clearPrintBtn").addEventListener("click", clearPrint);
+      $("#generateQuickBtn").addEventListener("click", generateQuick);
+      $("#printQuickType").addEventListener("change", ()=>{
+        const t = $("#printQuickType").value;
+        $("#quickDateWrap").style.display = (t==="agendaDia") ? "block" : "none";
+        $("#quickPatientWrap").style.display = (t==="agendaDia") ? "none" : "block";
+        if(t==="documento"){ $("#quickPatientWrap").style.display = "none"; }
+      });
+
+      // backup
+      $("#exportBtn").addEventListener("click", exportBackup);
+      $("#importFile").addEventListener("change", async (e)=>{
+        const f = e.target.files?.[0];
+        if(!f) return;
+        await importBackup(f);
+        e.target.value="";
+      });
+
+      // reset
+      $("#resetAllBtn").addEventListener("click", ()=> wipeAll(true));
+
+      // save now
+      $("#saveNowBtn").addEventListener("click", async ()=>{
+        // força salvar record do paciente atual
+        if($("#sec-record").classList.contains("active")){
+          await saveRecord().catch(()=>{});
+        }
+        toast("Salvo ✅");
+      });
+
+      // quick search
+      $("#quickSearch").addEventListener("keydown", (e)=>{
+        if(e.key==="Enter") quickSearch();
+      });
+
+      // online/offline
+      function net(){
+        $("#netState").textContent = navigator.onLine ? "online" : "offline";
+      }
+      window.addEventListener("online", net);
+      window.addEventListener("offline", net);
+      net();
+      $("#autosaveState").textContent = "ON";
+    }
+
+    // ---------- Docs & print quick wrap toggle init ----------
+    function initQuickPrintUI(){
+      $("#printQuickType").dispatchEvent(new Event("change"));
+    }
+
+    // ---------- Init demo data (first run) ----------
+    async function ensureFirstRun(){
+      // If no patients, create one example? (sem poluir, mas ajuda a testar)
+      if(state.patients.length===0){
+        const p = { id: uid(), name:"Paciente Exemplo", phone:"", birth:"", doc:"", addr:"", createdAt: Date.now(), updatedAt: Date.now() };
+        await idbPut("patients", p);
+
+        const a = { id: uid(), datetime: new Date().toISOString(), patientId: p.id, status:"pendente", note:"Exemplo: primeira consulta", createdAt: Date.now(), updatedAt: Date.now() };
+        await idbPut("appointments", a);
+
+        const d = { id: uid(), patientId: p.id, date: todayISO(), type:"receituario", title:"Modelo rápido", body:"Prescrevo:\n1) ...\n\nOrientações:\n- ...", createdAt: Date.now(), updatedAt: Date.now() };
+        await idbPut("documents", d);
+
+        await loadAll();
+      }
+    }
+
+    // ---------- Start ----------
+    (async function init(){
+      initTheme();
+      await openDB();
+      await loadMeta();
+      await loadAll();
+      await ensureFirstRun();
+
+      // defaults
+      $("#apptDateTime").value = nowLocalDT();
+      $("#dashDate").value = todayISO();
+      $("#printQuickDate").value = todayISO();
+      $("#docDate").value = todayISO();
+      $("#recDate").value = todayISO();
+
+      bindEvents();
+      initQuickPrintUI();
+      refreshAll();
+
+      // choose defaults
+      if(state.patients[0]){
+        state.selectedPatientId = state.patients[0].id;
+        state.selectedRecordPatientId = state.patients[0].id;
+        state.selectedOdoPatientId = state.patients[0].id;
+      }
+      refreshAll();
+
+      toast("BTX Clinic pronto ✅");
+    })().catch(err=>{
+      console.error(err);
+      alert("Erro ao iniciar BTX Clinic: " + err.message);
+    });
+
+    // ---------- Doc printing helpers from tabs ----------
+    $("#printAgendaBtn")?.addEventListener?.("click", ()=>{});
+  </script>
+</body>
+</html>
